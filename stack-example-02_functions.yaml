@@ -1,0 +1,62 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Descripcion  en mas de 
+  una linea
+#parametros
+## Con los AllowedValues sale una lista de los parametros, predefinidos 
+Parameters:
+  InstanceTypeParameter:
+    Type: String
+    Default: t2.micro
+    AlloweVadlues:
+      - t2.micro
+      - m1.small
+      - m1.large
+    Description: Enter t2.micro, m1.small, or m1.large. Default is t2.micro.
+  ## estos 2 tipos de parametro se pediran al momento de subir eel archivo cloudformation 
+  KeyPairParameter:
+    Type: String
+  AmiIdParameter:
+    Type: String
+ # Cada recurso tiene unos valores de salida, esto se puede ver en la documentacion buscando el recurso, y en la ultima parte sale    
+Outputs:
+  PublicIP:
+    Description: Ip publica 
+    value: !GetAtt InstanciaEC2.PublicIp
+  IdInstancia:
+    Description: Id de la isntancia
+    Value: !Ref InstanciaEC2
+    #el export sirve para que otro stack pueda leer el valor que envio en el oputput 
+    Export:
+      Name: Name of resource to export    
+
+#Recursos que necesito que el stack gestione 
+## en resources:
+Resources:
+## va el ID logico va como quiero yo que se llame 
+  InstanciaEC2:
+  #tipo de la instancia va con AWS::EC2::.....
+    Type: "AWS::EC2::Instance"
+    ##propiedades
+    Properties: 
+      ImageId: !Ref AmiIdParameter #id de la ami traida desde el parametro 
+      KeyName: !Ref KeyPairParameter
+      InstanceType: !Ref InstanceTypeParameter ## asi toma el valor que se coloca en el parametro 
+      SecurityGroupIds: 
+        - !Ref InstanceSecurityGroup
+#securioty group
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow http to client host
+      VpcId: "id-vpc"
+      SecurityGr oupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1 # con -1 le digo que todos los protocolo tendra salida junto con 0 en los puertos
+          FromPort: 0
+          ToPort: 0
+          CidrIp: 0.0.0.0/0
